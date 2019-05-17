@@ -11,6 +11,9 @@ using Td = Telegram.Td;
 using TdApi = Telegram.Td.Api;
 using System.Threading;
 using System.Collections;
+using TMDbLib;
+using TMDbLib.Objects.Search;
+using TMDbLib.Objects.General;
 
 namespace xTelegram
 {
@@ -20,7 +23,7 @@ namespace xTelegram
         string strLastMessage = string.Empty;
         int iCnt1 = 0;
         int iCnt3 = 0;
-
+        int iCnt6 = 0;
         //Globle Object List
         objChat[] gobjChats = new objChat[1000];
         long glngChatIndex = 0;
@@ -29,24 +32,17 @@ namespace xTelegram
 
         objMessage[] gobjMessages = new objMessage[1000];
         long glngMessageIndex = 0;
-       
+
+        //Create OMDB API Client
+        TMDbLib.Client.TMDbClient objTMDBClient = new TMDbLib.Client.TMDbClient("ef1422d351866bc45e21c29a52f3e3d4");
+        //TMDbLib.Client.TMDbClient objTMDBClient = new TMDbLib.Client.TMDbClient("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlZjE0MjJkMzUxODY2YmM0NWUyMWMyOWE1MmYzZTNkNCIsInN1YiI6IjVjZGUyZjc3YzNhMzY4MGFkNWMxODdmNCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.68PapeEvaj1vDLX41CtA0n6QnjG9hguUUQvgNBXKw9o");
+        SearchMovie objSearchResult = null;
+
+        //Define data source for download grid
+        System.Data.DataTable dtDownloads = new System.Data.DataTable();
+        Dictionary<string, TdApi.File> lstDownloadFiles = new Dictionary<string, TdApi.File>();
 
 
-
-        public class ValueType<T>
-        {
-            T item;
-            public ValueType() { }
-            public ValueType(T item)
-            {
-                this.item = item;
-            }
-            public T ItemProperty
-            {
-                get { return this.item; }
-                set { this.item = value; }
-            }
-        }
 
 
 
@@ -61,6 +57,17 @@ namespace xTelegram
             Application.DoEvents();
             tdEngine.StartEngine();
             showmessage("Started now");
+
+            //Define datasource for donwload list
+            dtDownloads.Columns.Add("ID", typeof(int));
+            dtDownloads.Columns.Add("Name", typeof(string));
+            dtDownloads.Columns.Add("Percent", typeof(double));
+
+            dtDownloads.Rows.Add(new object[] { 1,"Test", 12.4 });
+            radGridDownloads.DataSource = dtDownloads;
+
+
+
         }
 
         private void Button1_Click(object sender, EventArgs e)
@@ -94,6 +101,23 @@ namespace xTelegram
             if (tdEngine.strEngStatus == "AutorizationDone")
             {
                 LoadChatsButton.Enabled = true;
+            }
+
+            //check update object
+            if (tdEngine.objUpdated != null && tdEngine.objUpdated.Count > 0)
+            {
+                //We got some update here.
+                TdApi.BaseObject objReturned = tdEngine.objUpdated.Dequeue();
+                if (objReturned.GetType().FullName == "Telegram.Td.Api.UpdateFile" )
+                {
+                    Td.Api.UpdateFile objUpdateFile = (Td.Api.UpdateFile)objReturned;
+                    dtDownloads.Select("id = " + objUpdateFile.File.Id.ToString())[0].SetField("percent",  (double) objUpdateFile.File.Local.DownloadedSize / (double) objUpdateFile.File.ExpectedSize);
+
+                }
+                else { 
+                showmessage(objReturned.GetType().FullName);
+                showmessage(objReturned.ToString());
+                }
             }
 
 
@@ -202,19 +226,6 @@ namespace xTelegram
            
         }
 
-        private void XGetChatFiles(long value)
-        {
-            try
-            {
-                //Lets get all the file in fill in second
-
-            }
-            catch (Exception ex)
-            {
-
-                showmessage(ex.StackTrace);
-            }
-        }
 
         private void RadGridView1_CellClick(object sender, Telerik.WinControls.UI.GridViewCellEventArgs e)
         {
@@ -280,6 +291,7 @@ namespace xTelegram
                             if (lobjMessageDocument.Document.MimeType == "video/x-matroska" | lobjMessageDocument.Document.MimeType == "video/mp4") {
                                 gobjMessages[glngMessageIndex].MessageType = "Movie";
                                 gobjMessages[glngMessageIndex].MessageTitle = lobjMessageDocument.Document.FileName;
+                                gobjMessages[glngMessageIndex].FileID = lobjMessageDocument.Document.DocumentValue.Id;
                             }
                             else {
                                 gobjMessages[glngMessageIndex].MessageType = lobjMessageDocument.Document.MimeType;
@@ -315,10 +327,7 @@ namespace xTelegram
 
                     }
 
-
-
-
-
+                   
 
                 }
                 return true;
@@ -333,7 +342,148 @@ namespace xTelegram
 
 
         }
+
+        private bool GetOMDBResult(string pstrMovieName, ref SearchMovie pSearchMovieOut)
+        {
+            try
+            {
+                pstrMovieName=pstrMovieName.TrimEnd();
+                SearchContainer<SearchMovie> results =  objTMDBClient.SearchMovieAsync(pstrMovieName).Result;
+
+
+                //If error will catch in try block so here we will get searchlist
+                if (results.Results.Count > 0)
+                {
+                    foreach (SearchMovie item in results.Results)
+                    {
+                        showmessage("Title:" + item.Title + " Type:" + item.MediaType + " IMDBID: " + item.Id);
+                    }
+                    pSearchMovieOut = results.Results.FirstOrDefault(t => t.Title.ToLower().Contains(pstrMovieName));
+                    //pSearchMovieOut = results.Results.First();
+                    return true;
+
+                }
+                else {return false;}
+
+            }
+            catch (Exception ex)
+            {
+                showmessage(ex.Message);
+                return false;
+            }
+        }
+
+        private void GetMoviewInfoFromTMDB(string pstrMovieName)
+        {
+            //We will get name of document. We have to find exact movie
+            string lstrCell = pstrMovieName;
+            //Remove filename
+            lstrCell = lstrCell.Substring(0, lstrCell.Length - 3).ToLower();
+            showmessage("Finding string : " + lstrCell);
+            if (GetOMDBResult(lstrCell, ref objSearchResult)) { return; }
+
+            lstrCell = lstrCell.Replace(".", " ");
+            showmessage("Finding string : " + lstrCell);
+            if (GetOMDBResult(lstrCell, ref objSearchResult)) { return; }
+
+            lstrCell = lstrCell.Replace("720p", "").Replace("HDRip", "").Replace("BRRip", "").Replace("(", "").Replace(")", "");
+            showmessage("Finding string : " + lstrCell);
+            if (GetOMDBResult(lstrCell, ref objSearchResult)) { return; }
+
+            //Remove word starting with @ or containing @
+            string[] strChars = lstrCell.Split(' ');
+            string strNewCell = string.Empty;
+            foreach (var item in strChars)
+            {
+                if (!item.All(char.IsNumber) && !item.Contains("@") && (!item.Contains("audio")) && (!item.Contains("rip"))) { strNewCell += item + " "; }
+            }
+            strNewCell.Substring(1, (strNewCell.Length - 1));
+            showmessage("Finding string : " + strNewCell);
+            if (GetOMDBResult(strNewCell, ref objSearchResult)) { return; }
+
+            //try to remove from back side
+            strNewCell = string.Empty;
+            for (int iCnt8 = strChars.Length - 1; iCnt8 > 0; iCnt8--)
+            {
+                strNewCell = string.Empty;
+                for (int iCnt9 = 0; iCnt9 < iCnt8; iCnt9++)
+                {
+                    strNewCell += strChars[iCnt9] + " ";
+                }
+                strNewCell.Substring(1, (strNewCell.Length - 1));
+                showmessage("Finding string : " + strNewCell);
+                if (GetOMDBResult(strNewCell, ref objSearchResult)) { return; }
+            }
+        }
+
+            private void RadGridView2_CellDoubleClick(object sender, Telerik.WinControls.UI.GridViewCellEventArgs e)
+        {
+            try
+            {
+                showmessage("Clicked on column index : " + e.ColumnIndex.ToString());
+                objSearchResult = null; //Reset search result
+                switch (e.ColumnIndex)
+                {
+                    case 0: //messageid
+                        break;
+                    case 1: //Type
+                        break;
+                    case 2: // Name
+                        GetMoviewInfoFromTMDB(e.Value.ToString());
+                        if (objSearchResult != null)
+                        {
+                            showmessage("Found movie as final : " + objSearchResult.Title);
+                        }
+                        break;
+                    case 3: // fileid
+                        tdEngine.DownloadFile((int)e.Value);
+                        MessageLabel.Text = "Downloading file " + e.Value.ToString();
+                        while (tdEngine.strEngStatus != "downloadfilereceived" && iCnt6 < 1000) { iCnt6 += 1; System.Threading.Thread.Sleep(100); Application.DoEvents(); }
+                        if (tdEngine.strEngStatus == "downloadfilereceived")
+                        {
+                            //dosomething on received file...
+                            TdApi.BaseObject objReturned = tdEngine.objReturned;
+                            if (objReturned.GetType().FullName == "Telegram.Td.Api.File")
+                            {
+                                //Cast object to file
+                                Td.Api.File objTdApiFile = (Td.Api.File)objReturned;
+                                //Add to list of loadloading file
+                                lstDownloadFiles.Add(objTdApiFile.Id.ToString(),objTdApiFile);
+                                //Create raw in grid
+                                dtDownloads.Rows.Add(new object[] { objTdApiFile.Id, radGridView2.Rows[e.RowIndex].Cells[2].Value ,0.0 });
+                                
+                            }
+                            showmessage(objReturned.GetType().FullName);
+                            showmessage(objReturned.ToString());
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+               
+
+                
+
+             }
+            catch (Exception ex)
+            {
+                showmessage(ex.StackTrace);
+            }
+        }
+
+        private void Button2_Click_1(object sender, EventArgs e)
+        {
+            LogText.Clear();
+        }
+
+        private void RadGridView2_Click(object sender, EventArgs e)
+        {
+
+        }
     }
+
+ 
 
     public class objChat
     {
@@ -351,5 +501,22 @@ namespace xTelegram
         public long MessageID { get; set; }
         public string MessageType { get; set; }
         public string MessageTitle { get; set; }
+        public int FileID { get; set; }
     }
+
+    public class ValueType<T>
+    {
+        T item;
+        public ValueType() { }
+        public ValueType(T item)
+        {
+            this.item = item;
+        }
+        public T ItemProperty
+        {
+            get { return this.item; }
+            set { this.item = value; }
+        }
+    }
+
 }

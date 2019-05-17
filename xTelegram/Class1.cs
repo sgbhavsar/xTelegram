@@ -13,6 +13,7 @@ namespace xTelegram
     {
         public static Td.Client _client = null;
         private readonly static Td.ClientResultHandler _defaultHandler = new DefaultHandler();
+        private readonly static Td.ClientResultHandler _UpdateHandler = new UpdateHandler();
 
         public static TdApi.AuthorizationState _authorizationState = null;
         public static volatile bool _haveAuthorization = false;
@@ -21,6 +22,8 @@ namespace xTelegram
 
         public static string strMessagae { get; set; }
         public static TdApi.BaseObject objReturned { get; set; }
+        public static Queue<TdApi.BaseObject> objUpdated = new Queue<TdApi.BaseObject>();
+       
         public static string strEngStatus = "None";
 
         private static volatile AutoResetEvent _gotAuthorization = new AutoResetEvent(false);
@@ -50,13 +53,22 @@ namespace xTelegram
 
         }
 
+        public static void DownloadFile(int pintFileID)
+        {
+            strEngStatus = "downloadfileentered";
+            _client.Send(new TdApi.DownloadFile(pintFileID,1), _defaultHandler);
+            strEngStatus = "downloadfilesent";
+
+        }
         public static void GetChatList(long plngOffsetOrder, long plngOffsetChatID)
         {
             strMessagae = "Getting chat lists";
             if (tdEngine._haveAuthorization)
             {
                 strEngStatus = "getchatsentered";
+                tdEngine._client.SetUpdatesHandler(_UpdateHandler);
                 tdEngine._client.Send(new TdApi.GetChats(plngOffsetOrder, plngOffsetChatID, 10), _defaultHandler); // preload chat list
+      
                 strEngStatus = "getchatssent";
             }
         }
@@ -270,6 +282,8 @@ namespace xTelegram
             strMessagae = "Waiting for Code";
 
         }
+        
+        
 
         private class DefaultHandler : Td.ClientResultHandler
         {
@@ -289,10 +303,28 @@ namespace xTelegram
                     objReturned = @object;
                     strEngStatus = "getmessagesfromchatrecevied";
                 }
-
+                if (strEngStatus == "downloadfilesent" | strEngStatus == "downloadfilereceived")
+                {
+                    objReturned = @object;
+                    strEngStatus = "downloadfilereceived";
+                }
 
             }
         }
+
+        private class UpdateHandler : Td.ClientResultHandler
+        {
+            void Td.ClientResultHandler.OnResult(TdApi.BaseObject @object)
+            {
+               
+                if (strEngStatus == "downloadfilesent" | strEngStatus == "downloadfilereceived")
+                {
+                    objUpdated.Enqueue(@object);
+                }
+
+            }
+        }
+
 
         private class UpdatesHandler : Td.ClientResultHandler
         {

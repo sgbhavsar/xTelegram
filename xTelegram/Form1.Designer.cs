@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             Telerik.WinControls.UI.TableViewDefinition tableViewDefinition1 = new Telerik.WinControls.UI.TableViewDefinition();
             Telerik.WinControls.UI.TableViewDefinition tableViewDefinition2 = new Telerik.WinControls.UI.TableViewDefinition();
+            Telerik.WinControls.UI.TableViewDefinition tableViewDefinition3 = new Telerik.WinControls.UI.TableViewDefinition();
             this.label1 = new System.Windows.Forms.Label();
             this.CodeTxt = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
@@ -47,11 +48,15 @@
             this.lblMessageCounter = new System.Windows.Forms.Label();
             this.chkLoadAll = new System.Windows.Forms.CheckBox();
             this.chkLoadUnknown = new System.Windows.Forms.CheckBox();
+            this.button2 = new System.Windows.Forms.Button();
+            this.radGridDownloads = new Telerik.WinControls.UI.RadGridView();
             ((System.ComponentModel.ISupportInitialize)(this.radStatusStrip1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.radGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.radGridView1.MasterTemplate)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.radGridView2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.radGridView2.MasterTemplate)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.radGridDownloads)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.radGridDownloads.MasterTemplate)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -89,6 +94,8 @@
             // 
             // LogText
             // 
+            this.LogText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.LogText.Location = new System.Drawing.Point(12, 320);
             this.LogText.Name = "LogText";
             this.LogText.Size = new System.Drawing.Size(1263, 314);
@@ -122,6 +129,8 @@
             // 
             // radGridView1
             // 
+            this.radGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.radGridView1.Location = new System.Drawing.Point(12, 87);
             // 
             // 
@@ -149,14 +158,20 @@
             // 
             // radGridView2
             // 
+            this.radGridView2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.radGridView2.Location = new System.Drawing.Point(668, 87);
             // 
             // 
             // 
             this.radGridView2.MasterTemplate.ViewDefinition = tableViewDefinition2;
             this.radGridView2.Name = "radGridView2";
-            this.radGridView2.Size = new System.Drawing.Size(607, 227);
+            this.radGridView2.ReadOnly = true;
+            this.radGridView2.Size = new System.Drawing.Size(287, 227);
             this.radGridView2.TabIndex = 10;
+            this.radGridView2.CellDoubleClick += new Telerik.WinControls.UI.GridViewCellEventHandler(this.RadGridView2_CellDoubleClick);
+            this.radGridView2.Click += new System.EventHandler(this.RadGridView2_Click);
             // 
             // lblChatCounter
             // 
@@ -169,6 +184,7 @@
             // 
             // lblMessageCounter
             // 
+            this.lblMessageCounter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblMessageCounter.AutoSize = true;
             this.lblMessageCounter.Location = new System.Drawing.Point(665, 71);
             this.lblMessageCounter.Name = "lblMessageCounter";
@@ -178,6 +194,7 @@
             // 
             // chkLoadAll
             // 
+            this.chkLoadAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.chkLoadAll.AutoSize = true;
             this.chkLoadAll.Location = new System.Drawing.Point(820, 66);
             this.chkLoadAll.Name = "chkLoadAll";
@@ -188,6 +205,7 @@
             // 
             // chkLoadUnknown
             // 
+            this.chkLoadUnknown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.chkLoadUnknown.AutoSize = true;
             this.chkLoadUnknown.Location = new System.Drawing.Point(922, 66);
             this.chkLoadUnknown.Name = "chkLoadUnknown";
@@ -196,11 +214,37 @@
             this.chkLoadUnknown.Text = "Load Unknown";
             this.chkLoadUnknown.UseVisualStyleBackColor = true;
             // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(557, 9);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(121, 27);
+            this.button2.TabIndex = 15;
+            this.button2.Text = "Clear";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.Button2_Click_1);
+            // 
+            // radGridDownloads
+            // 
+            this.radGridDownloads.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.radGridDownloads.Location = new System.Drawing.Point(961, 87);
+            // 
+            // 
+            // 
+            this.radGridDownloads.MasterTemplate.ViewDefinition = tableViewDefinition3;
+            this.radGridDownloads.Name = "radGridDownloads";
+            this.radGridDownloads.ReadOnly = true;
+            this.radGridDownloads.Size = new System.Drawing.Size(314, 227);
+            this.radGridDownloads.TabIndex = 16;
+            // 
             // MainFrom
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1287, 666);
+            this.Controls.Add(this.radGridDownloads);
+            this.Controls.Add(this.button2);
             this.Controls.Add(this.chkLoadUnknown);
             this.Controls.Add(this.chkLoadAll);
             this.Controls.Add(this.lblMessageCounter);
@@ -217,12 +261,15 @@
             this.Controls.Add(this.label1);
             this.Name = "MainFrom";
             this.Text = "xTelegram";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.MainFrom_Load);
             ((System.ComponentModel.ISupportInitialize)(this.radStatusStrip1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.radGridView1.MasterTemplate)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.radGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.radGridView2.MasterTemplate)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.radGridView2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.radGridDownloads.MasterTemplate)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.radGridDownloads)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -246,6 +293,8 @@
         private System.Windows.Forms.Label lblMessageCounter;
         private System.Windows.Forms.CheckBox chkLoadAll;
         private System.Windows.Forms.CheckBox chkLoadUnknown;
+        private System.Windows.Forms.Button button2;
+        private Telerik.WinControls.UI.RadGridView radGridDownloads;
     }
 }
 
